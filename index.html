@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SkyLens - Advanced Weather Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="style.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: "#1a1a2e",
+                        secondary: "#16213e",
+                        accent: "#0f3460",
+                        highlight: "#e94560",
+                        gold: "#f39c12",
+                        emerald: "#27ae60",
+                        purple: "#8e44ad",
+                        ocean: "#3498db",
+                    },
+                },
+            },
+        };
+    </script>
+
+</head>
+
+<body class="min-h-screen aurora-bg transition-all duration-1000 relative overflow-x-hidden" id="mainBody">
+    <!-- Floating Particles -->
+    <div id="particles" class="fixed inset-0 pointer-events-none z-0"></div>
+
+    <!-- Navigation Header -->
+    <nav class="neo-card m-4 rounded-3xl p-4 sticky top-4 z-50 slide-in-left">
+        <div class="container mx-auto flex flex-col lg:flex-row justify-between items-center space-y-4 lg:space-y-0">
+            <div class="flex items-center space-x-4">
+                <div
+                    class="w-12 h-12 bg-gradient-to-r from-highlight to-gold rounded-full flex items-center justify-center neon-glow">
+                    <i class="fas fa-satellite text-white text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-2xl font-bold gradient-text">SkyLens</h1>
+                    <p class="text-gray-300 text-sm">Advanced Weather Intelligence</p>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <button id="tempToggle"
+                    class="neo-card px-6 py-3 rounded-full text-white hover:neon-glow transition-all font-semibold">
+                    <i class="fas fa-thermometer-half mr-2"></i>°C
+                </button>
+                <button id="getCurrentLocation"
+                    class="bg-gradient-to-r from-highlight to-purple px-6 py-3 rounded-full text-white hover:neon-glow transition-all font-semibold">
+                    <i class="fas fa-crosshairs mr-2"></i>Locate Me
+                </button>
+                <button id="randomCity"
+                    class="neo-card px-6 py-3 rounded-full text-white hover:neon-glow transition-all font-semibold">
+                    <i class="fas fa-dice mr-2"></i>Random City
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Search Section -->
+    <div class="container mx-auto px-4 py-8 slide-in-right">
+        <div class="max-w-4xl mx-auto text-center mb-12">
+            <h2 class="text-5xl lg:text-7xl font-bold gradient-text mb-6 floating-animation">
+                Weather Intelligence
+            </h2>
+            <p class="text-xl text-gray-300 mb-8 max-w-2xl mx-auto">
+                Experience the future of weather forecasting with real-time data,
+                AI-powered insights, and stunning visualizations
+            </p>
+
+            <!-- Advanced Search -->
+            <div class="relative max-w-2xl mx-auto dropdown-container">
+                <div class="neo-card rounded-full p-2 neon-glow">
+                    <div class="flex items-center gap-2">
+                        <input type="text" id="citySearch" placeholder="Search cities, countries..."
+                            class="flex-1 bg-transparent px-4 sm:px-6 py-3 sm:py-4 text-white placeholder-gray-400 focus:outline-none search-focus text-base sm:text-lg min-w-0" />
+                        <button id="searchBtn"
+                            class="bg-gradient-to-r from-highlight to-gold px-4 sm:px-8 py-3 sm:py-4 rounded-full text-white font-semibold hover:neon-glow transition-all whitespace-nowrap">
+                            <i class="fas fa-search mr-1 sm:mr-2"></i><span class="hidden sm:inline">Search</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Smart Suggestions -->
+                <div id="suggestions" class="dropdown-content neo-card rounded-2xl p-4 hidden">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">
+                        Popular Cities
+                    </h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="popularCities">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Recent Searches -->
+                <div id="recentSearches" class="dropdown-content neo-card rounded-2xl hidden">
+                    <div class="p-4">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-semibold text-gray-400 uppercase tracking-wide">
+                                Recent Searches
+                            </h3>
+                            <button id="clearHistory" class="text-xs text-highlight hover:text-gold transition-colors">
+                                <i class="fas fa-trash mr-1"></i>Clear
+                            </button>
+                        </div>
+                        <div id="recentCitiesList" class="space-y-2">
+                            <!-- Recent cities will be populated here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Search Results Container -->
+                <div id="searchResults" class="dropdown-content neo-card rounded-2xl p-4 hidden">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-3 uppercase tracking-wide">
+                        Search Results
+                    </h3>
+                    <div id="searchResultsList" class="space-y-2">
+                        <!-- Search results will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div class="container mx-auto px-4">
+        <!-- Weather Alert -->
+        <div id="weatherAlert" class="hidden mb-6 fade-in-up">
+            <div class="max-w-4xl mx-auto neo-card p-6 rounded-2xl border-l-4 border-highlight neon-glow">
+                <div class="flex items-start">
+                    <div class="weather-radar w-12 h-12 mr-4 flex-shrink-0"></div>
+                    <div>
+                        <h3 class="text-white font-bold text-lg mb-2">Weather Alert</h3>
+                        <p id="alertMessage" class="text-gray-300"></p>
+                        <div class="flex items-center mt-3 space-x-4">
+                            <span
+                                class="text-xs bg-highlight px-3 py-1 rounded-full text-white font-semibold">ACTIVE</span>
+                            <span id="alertTime" class="text-xs text-gray-400"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Display -->
+        <div id="errorDisplay" class="hidden mb-6 fade-in-up">
+            <div class="max-w-2xl mx-auto neo-card p-6 rounded-2xl border-l-4 border-red-500">
+                <div class="flex items-center">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl mr-4"></i>
+                    <div>
+                        <h3 class="text-white font-semibold mb-1">
+                            Something went wrong
+                        </h3>
+                        <p id="errorMessage" class="text-gray-300"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div id="loadingIndicator" class="hidden mb-6">
+            <div class="max-w-lg mx-auto neo-card p-8 rounded-2xl text-center neon-glow">
+                <div class="loading-dots mx-auto mb-4">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+                <h3 class="text-white font-semibold mb-2">
+                    Analyzing Weather Patterns
+                </h3>
+                <p class="text-gray-300">
+                    Fetching real-time data from satellites...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Current Weather Dashboard -->
+    <div id="currentWeather" class="hidden container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <!-- Main Weather Card -->
+            <div class="neo-card rounded-3xl p-8 mb-8 weather-morph slide-in-left">
+                <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                    <!-- Left: Main Info -->
+                    <div class="xl:col-span-2">
+                        <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between mb-6">
+                            <div>
+                                <h2 id="cityName" class="text-4xl font-bold text-white mb-2"></h2>
+                                <div class="flex items-center space-x-4 text-gray-300">
+                                    <span id="currentDate"></span>
+                                    <span id="currentTime" class="pulse-glow"></span>
+                                </div>
+                            </div>
+                            <div id="weatherBadge"
+                                class="mt-4 lg:mt-0 px-4 py-2 bg-gradient-to-r from-highlight to-gold rounded-full text-white font-semibold text-sm">
+                                LIVE
+                            </div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="flex items-center space-x-6">
+                                <div id="weatherIcon" class="text-8xl weather-icon-bounce"></div>
+                                <div>
+                                    <span id="currentTemp" class="text-6xl font-bold gradient-text block mb-2"></span>
+                                    <p id="weatherDescription" class="text-xl text-gray-300 capitalize mb-1"></p>
+                                    <p id="feelsLike" class="text-gray-400"></p>
+                                </div>
+                            </div>
+
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400">High / Low</span>
+                                    <span id="highLow" class="text-white font-semibold"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400">UV Index</span>
+                                    <span id="uvIndex" class="text-white font-semibold"></span>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-gray-400">Air Quality</span>
+                                    <span id="airQuality" class="text-white font-semibold">Good</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right: Weather Stats -->
+                    <div class="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                        <div class="neo-card p-4 rounded-2xl text-center hover:neon-glow transition-all">
+                            <i class="fas fa-tint text-ocean text-3xl mb-3"></i>
+                            <h3 class="text-gray-400 text-sm mb-1">Humidity</h3>
+                            <p id="humidity" class="text-white text-2xl font-bold"></p>
+                        </div>
+                        <div class="neo-card p-4 rounded-2xl text-center hover:neon-glow transition-all">
+                            <i class="fas fa-wind text-emerald text-3xl mb-3"></i>
+                            <h3 class="text-gray-400 text-sm mb-1">Wind Speed</h3>
+                            <p id="windSpeed" class="text-white text-2xl font-bold"></p>
+                        </div>
+                        <div class="neo-card p-4 rounded-2xl text-center hover:neon-glow transition-all">
+                            <i class="fas fa-gauge text-gold text-3xl mb-3"></i>
+                            <h3 class="text-gray-400 text-sm mb-1">Pressure</h3>
+                            <p id="pressure" class="text-white text-2xl font-bold"></p>
+                        </div>
+                        <div class="neo-card p-4 rounded-2xl text-center hover:neon-glow transition-all">
+                            <i class="fas fa-eye text-purple text-3xl mb-3"></i>
+                            <h3 class="text-gray-400 text-sm mb-1">Visibility</h3>
+                            <p id="visibility" class="text-white text-2xl font-bold"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Hourly Forecast -->
+            <div class="neo-card rounded-3xl p-6 mb-8 slide-in-right">
+                <h3 class="text-2xl font-bold text-white mb-6 flex items-center">
+                    <i class="fas fa-clock text-highlight mr-3"></i>
+                    24-Hour Forecast
+                </h3>
+                <div id="hourlyForecast" class="flex space-x-4 overflow-x-auto pb-4">
+                    <!-- Hourly cards will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extended Forecast -->
+    <div id="forecastSection" class="hidden container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold gradient-text mb-4">
+                    Extended Forecast
+                </h2>
+                <p class="text-gray-300 text-lg">
+                    7-day weather outlook with detailed insights
+                </p>
+            </div>
+
+            <div id="forecastContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Forecast cards will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Weather Insights -->
+    <div id="insightsSection" class="hidden container mx-auto px-4 py-8">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-4xl font-bold gradient-text mb-8 text-center">
+                Weather Insights
+            </h2>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <!-- Weather Patterns -->
+                <div class="neo-card rounded-3xl p-6 weather-morph">
+                    <h3 class="text-2xl font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-chart-line text-gold mr-3"></i>
+                        Weather Patterns
+                    </h3>
+                    <div id="weatherPattern" class="space-y-4">
+                        <!-- Pattern analysis will be populated here -->
+                    </div>
+                </div>
+
+                <!-- Climate Summary -->
+                <div class="neo-card rounded-3xl p-6 weather-morph">
+                    <h3 class="text-2xl font-bold text-white mb-4 flex items-center">
+                        <i class="fas fa-leaf text-emerald mr-3"></i>
+                        Climate Summary
+                    </h3>
+                    <div id="climateSummary" class="space-y-4">
+                        <!-- Climate data will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="neo-card m-4 rounded-3xl p-8 text-center">
+        <div class="flex flex-col md:flex-row items-center justify-between">
+            <div class="flex items-center space-x-4 mb-4 md:mb-0">
+                <div
+                    class="w-10 h-10 bg-gradient-to-r from-highlight to-gold rounded-full flex items-center justify-center">
+                    <i class="fas fa-satellite text-white"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">SkyLens</h3>
+                    <p class="text-gray-400 text-sm">Advanced Weather Intelligence</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-6">
+                <span class="text-gray-400 text-sm">Powered by OpenWeatherMap</span>
+                <div class="flex space-x-3">
+                    <button class="text-gray-400 hover:text-highlight transition-colors">
+                        <i class="fab fa-github"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-highlight transition-colors">
+                        <i class="fab fa-twitter"></i>
+                    </button>
+                    <button class="text-gray-400 hover:text-highlight transition-colors">
+                        <i class="fab fa-linkedin"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/js/all.min.js"></script>
+    <script src="script.js"></script>
+</body>
+
+</html>
